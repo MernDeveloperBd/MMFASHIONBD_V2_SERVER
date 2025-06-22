@@ -6,7 +6,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import connectDB from './config/mongodb.js';
 import connectCloudinary from './config/cloudinary.js';
-import userRouter from './models/route/user.route.js';
+import userRouter from './route/user.route.js';
 
 
 // app confit
@@ -14,7 +14,7 @@ const app = express();
 const port = process.env.PORT || 5000 ;
 
 connectDB()
-connectCloudinary()
+
 
 // Middleware
 app.use(cors())

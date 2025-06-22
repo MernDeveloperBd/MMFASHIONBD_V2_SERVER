@@ -21,6 +21,14 @@ const verifyEmailTemplate = (username, otp) => {
         border-radius: 10px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
+      .logo {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .logo img {
+        width: 80px;
+        height: auto;
+      }
       .header {
         text-align: center;
         border-bottom: 1px solid #e0e0e0;
@@ -46,6 +54,7 @@ const verifyEmailTemplate = (username, otp) => {
         border-radius: 6px;
         margin: 20px 0;
         letter-spacing: 2px;
+        
       }
       .footer {
         text-align: center;
@@ -55,21 +64,49 @@ const verifyEmailTemplate = (username, otp) => {
         border-top: 1px solid #e0e0e0;
         padding-top: 15px;
       }
+      .social-links {
+        margin-top: 10px;
+      }
+      .social-links a {
+        margin: 0 8px;
+        display: inline-block;
+        text-decoration: none;
+      }
+      .social-links img {
+        width: 24px;
+        height: 24px;
+      }
     </style>
   </head>
   <body>
     <div class="container">
+      <!-- Logo Section -->
+      <div class="logo">
+        <img src="https://i.ibb.co/PZntnvzy/Haramain-khushbo.jpg" alt="Haramain Khushbo Logo">
+      </div>
+
+      <!-- Header -->
       <div class="header">
         <h1>Hello, ${username}!</h1>
         <p>Please verify your email address</p>
       </div>
+
+      <!-- Content -->
       <div class="content">
         <p>Thanks for signing up with <strong>Haramain Khushbo</strong>. To complete your registration, please verify your email using the OTP below:</p>
         <div class="otp">${otp}</div>
         <p>If you didn't request this, you can safely ignore this email.</p>
       </div>
+
+      <!-- Footer -->
       <div class="footer">
         <p>&copy; 2025 Haramain Khushbo. All rights reserved.</p>
+        <div class="social-links">
+          <a href="https://facebook.com/yourpage"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook"></a>
+          <a href="https://twitter.com/yourpage"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter"></a>
+          <a href="https://instagram.com/yourpage"><img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram"></a>
+          <a href="https://linkedin.com/company/yourpage"><img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn"></a>
+        </div>
       </div>
     </div>
   </body>
