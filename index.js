@@ -5,16 +5,15 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import connectDB from './config/mongodb.js';
-import connectCloudinary from './config/cloudinary.js';
 import userRouter from './route/user.route.js';
-
+import categoryRouter from './route/category.route.js';
+import productRouter from './route/product.route.js';
 
 // app confit
 const app = express();
 const port = process.env.PORT || 5000 ;
 
 connectDB()
-
 
 // Middleware
 app.use(cors())
@@ -29,6 +28,8 @@ app.use(helmet({
 
 // api
 app.use('/api/user', userRouter)
+app.use('/api/category', categoryRouter)
+app.use('/api/product', productRouter )
 
 
 app.get('/', (req, res)=>{

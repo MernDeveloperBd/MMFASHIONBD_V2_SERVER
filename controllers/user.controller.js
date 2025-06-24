@@ -137,7 +137,7 @@ export async function loginUserController(req, res) {
         const checkPassword = await bcryptjs.compare(password, user.password);
         if (!checkPassword) {
             return res.status(400).json({
-                message: "Contact to Admin",
+                message: "Check your password",
                 error: true,
                 success: false
             })
@@ -214,6 +214,14 @@ export async function userAvatarController(req, res) {
 
         const user = await UserModel.findOne({ _id: userId })
 
+          if (!user) {
+            return res.status(400).json({
+                message: "User not found",
+                error: true,
+                success: false
+            })
+        }
+
         //First remove image from cloudinay
         const imgUrl = user.avatar;
         const urlArr = imgUrl.split("/");
@@ -242,7 +250,7 @@ export async function userAvatarController(req, res) {
                 image[i].path,
                 options,
                 function (error, result) {
-                    imagesArr.push(result.secure_url);
+                    imagesArr.push(result?.secure_url);
                     fs.unlinkSync(`uploads/${req.files[i].filename}`);
                 }
             )
@@ -433,6 +441,124 @@ export async function verifyForgotPasswordOtp(req, res) {
         })
     } catch (error) {
         return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
+
+// Reset password controller
+export async function resetPasswordController(req, res) {
+    try {
+        const {email, newPassword, confirmPassword} = req.body;
+        if(!email || !newPassword || !confirmPassword){
+            return res.status(400).json({
+                message:"Provide required fields email, newPassword, confirmPassword"
+            })
+        }
+        const user = await UserModel.findOne({ email: email });
+         if (!user) {
+            return res.status(400).json({
+                message: "Email not available",
+                error: true,
+                success: false
+            })
+        }
+
+         if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                message: "newPassword and confirmPassword must be same",
+                error: true,
+                success: false
+            })
+        }
+
+        const salt = await bcryptjs.genSalt(10)
+        const hashPassword = await bcryptjs.hash(confirmPassword, salt);
+        user.password = hashPassword;
+        await user.save()
+/* 
+        const update = await UserModel.findOneAndUpdate(user._id, {
+            password: hashPassword
+        }) */
+          return res.json({
+            message: "Password Updated Successfully",
+            error: false,
+            success: true,
+           
+        })
+
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
+
+// Refresh token controller
+export async function refreshTokenController(req,res) {
+    try {
+        const refreshToken = req.cookies.refreshToken || req?.headers?.authorization?.split(" ")[1]
+        if (!refreshToken) {
+            return res.status(401).json({
+                message: "Invalid Token",
+                error: true,
+                success: false
+            })
+        }
+        const verifyToken = await jwt.verify(refreshToken, process.env.SECRET_KEY_REFRESH_TOKEN);
+          if (!verifyToken) {
+            return res.status(401).json({
+                message: "Token is Expired",
+                error: true,
+                success: false
+            })
+        }
+        const userId = verifyToken?._id;
+        const newAccessToken = await generatedAccessToken(userId);
+
+        const cookiesOption = {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None"
+        }
+        res.cookie("accessToken", newAccessToken, cookiesOption);
+
+        return res.json({
+                message: "New access token genereated",
+                error: false,
+                success: true,
+                data:{
+                    accessToken: newAccessToken
+                }
+            })
+        
+    } catch (error) {
+           return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+    }
+
+// Get login user Details
+export async function userDetailsController(req, res) {
+    try {
+        const userId = req.userId;
+        const user = await UserModel.findById(userId).select('-password -refresh_token');
+        return res.json({
+                message: "User Details",
+                data:user,
+                error: false,
+                success: true,
+            })
+    } catch (error) {
+           return res.status(500).json({
             message: error.message || error,
             error: true,
             success: false
