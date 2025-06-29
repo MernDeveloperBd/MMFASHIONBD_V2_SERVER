@@ -321,7 +321,11 @@ export async function updateUserDetails(req, res) {
         const updateUser = await UserModel.findByIdAndUpdate(
             userId,
             {
-                name: name, mobile: mobile, email: email, verify_email: email !== userExist.email ? false : true, password: hashPassword,
+                name: name,
+                 mobile: mobile, 
+                 email: email,
+                  verify_email: email !== userExist.email ? false : true,
+                  password: hashPassword,
                 otp: verifyCode !== "" ? verifyCode : null,
                 otpExpires: verifyCode !== "" ? Date.now() + 600000 : ""
             },
@@ -559,12 +563,12 @@ export async function refreshTokenController(req, res) {
 export async function userDetailsController(req, res) {
     try {
         const userId = req.userId;
-        const user = await UserModel.findById(userId).select('-password -refresh_token');
+        const user = await UserModel.findById(userId).select('-password -refresh_token').populate('address_details');
         return res.json({
             message: "User Details",
             data: user,
-            error: false,
             success: true,
+            error: false,
         })
     } catch (error) {
         return res.status(500).json({

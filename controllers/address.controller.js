@@ -4,29 +4,29 @@ import UserModel from "../models/user.model.js";
 
 export const addAddressController = async (req, res) => {
     try {
-        const { address_line1, city, state, pincode, country, mobile, status } = req.body;
+        const { address_line1, city, state, pincode, country, mobile, status, selected } = req.body;
         const userId = req.userId;
 
-        if (!address_line1 || !city || !state || !pincode || !country || !mobile ) {
-            return res.status(500).json({
-            message: "Please provide all the fields",
-            error: true,
-            success: false
-        })
-        } 
+        /*   if (!address_line1 || !city || !state || !pincode || !country || !mobile ) {
+              return res.status(500).json({
+              message: "Please provide all the fields",
+              error: true,
+              success: false
+          })
+          }  */
 
         const address = new AddressModal({
-            address_line1, city, state, pincode, country, mobile, status , userId
+            address_line1, city, state, pincode, country, mobile, status, userId, selected
         })
         const savedAddress = await address.save();
 
-         const updateUserAddress = await UserModel.updateOne({_id: userId}, {
-            $push:{
+        const updateUserAddress = await UserModel.updateOne({ _id: userId }, {
+            $push: {
                 address_details: savedAddress?._id
             }
         })
 
-         return res.status(200).json({
+        return res.status(200).json({
             data: savedAddress,
             message: "Address added successfully",
             error: false,
@@ -46,27 +46,75 @@ export const addAddressController = async (req, res) => {
 
 }
 
-// get address controller
-export const getAllAddressController = async (req, res)=>{
-try {
-    const address = await AddressModal.find({userId:req?.query?.userId});
-    if(!address){
-        return res.status({
-            error: true,
-            success:false,
-            message:'Address not found'
-        })
-    }
-      return res.status({
+// get address controller 
+export const getAddressController = async (req, res) => {
+    try {
+        const address = await AddressModal.find({ userId: req?.query?.userId });
+
+        if (!address) {
+            return res.status(404).json({
+                success: false,
+                error: true,
+                message: 'Address not found'
+            })
+        }
+        else{
+            const updateUser = await UserModel.updateOne({_id: req?.query?.userId},{
+                $push:{
+                    address:address?._id
+                }
+            })
+        }
+        return res.status(200).json({
+            success: true,
             error: false,
-            success:true,
-            address:address
+            data: address
         })
-} catch (error) {
-      return res.status(500).json({
+    } catch (error) {
+        return res.status(500).json({
             message: error.message || error,
             error: true,
             success: false
         })
+    }
 }
+
+// update
+export const selectAddressController = async(req, res) =>{
+    try {
+        const userId = req?.params?.id;
+        const address = await AddressModal.find({
+            _id: userId //req?.params?.id 
+        })
+        if(!address){
+              return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+        }
+        else{
+               const updateAddress = await AddressModal.findByIdAndUpdate(
+            req?.params?.id,
+            {
+                selected: req?.body?.selected,
+                 mobile: mobile, 
+                 email: email,
+                  verify_email: email !== userExist.email ? false : true,
+                  password: hashPassword,
+                otp: verifyCode !== "" ? verifyCode : null,
+                otpExpires: verifyCode !== "" ? Date.now() + 600000 : ""
+            },
+            { new: true }
+        );
+        }
+
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
 }
