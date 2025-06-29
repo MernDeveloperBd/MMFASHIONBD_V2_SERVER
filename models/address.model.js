@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 const addressSchema =new mongoose.Schema({
-    address_line:{
+    address_line1:{
         type:String,
         default: ""
     },
@@ -19,7 +19,7 @@ const addressSchema =new mongoose.Schema({
     type: String
    },
    mobile:{
-    type: String,
+    type: Number,
     default: null
    },
    status:{
@@ -36,5 +36,5 @@ const addressSchema =new mongoose.Schema({
 
 })
 
-const AddressModal = mongoose.model("address". addressSchema)
+const AddressModal = mongoose.model("address", addressSchema)
 export default AddressModal;

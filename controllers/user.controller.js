@@ -30,7 +30,7 @@ export async function registerUserController(req, res) {
                 success: false
             })
         }
-        user = await UserModel.findOne({ email: email })
+         user = await UserModel.findOne({ email: email })
         if (user) {
             return res.status(400).json({
                 message: 'User already registered within this email',
@@ -144,6 +144,8 @@ export async function loginUserController(req, res) {
         }
         const accessToken = await generatedAccessToken(user._id)
         const refreshToken = await generatedRefreshToken(user._id)
+       
+        
 
         const updateUser = await UserModel.findByIdAndUpdate(user?._id, { last_login_date: new Date() })
         const cookiesOption = {
@@ -156,7 +158,7 @@ export async function loginUserController(req, res) {
         res.cookie('refreshToken', refreshToken, cookiesOption)
 
         return res.json({
-            message: "Login successfully",
+            message: "Login successful",
             error: false,
             success: true,
             data: {
@@ -214,7 +216,7 @@ export async function userAvatarController(req, res) {
 
         const user = await UserModel.findOne({ _id: userId })
 
-          if (!user) {
+        if (!user) {
             return res.status(400).json({
                 message: "User not found",
                 error: true,
@@ -303,6 +305,7 @@ export async function updateUserDetails(req, res) {
         const userExist = await UserModel.findById(userId)
         if (!userExist)
             return res.status(400).send("The user cannot be updated")
+
         let verifyCode = "";
         if (email !== userExist.email) {
             verifyCode = Math.floor(100000 + Math.random() * 900000).toString()
@@ -338,7 +341,14 @@ export async function updateUserDetails(req, res) {
             message: "User Updated Successfully",
             error: false,
             success: true,
-            user: updateUser
+            user: {
+                name: updateUser?.name,
+                _id: updateUser?._id,
+                email: updateUser?.email,
+                mobile: updateUser?.mobile,
+                avatar: updateUser?.avatar,
+
+            }
         })
 
 
@@ -369,7 +379,7 @@ export async function forgotPasswordController(req, res) {
 
             user.otp = verifyCode;
             user.otpExpires = Date.now() + 600000;
-            await user.save(0)
+            await user.save()
 
             await sendEmailFun({
                 to: email,
@@ -422,7 +432,7 @@ export async function verifyForgotPasswordOtp(req, res) {
                 success: false
             })
         }
-        const currentTime = new Date().toISOString()
+        const currentTime = new Date().toLocaleString()
         if (user.otpExpires < currentTime) {
             return res.status(400).json({
                 message: "OTP is Expired",
@@ -434,7 +444,7 @@ export async function verifyForgotPasswordOtp(req, res) {
         user.otpExpires = "";
         await user.save()
 
-        return res.status(400).json({
+        return res.status(200).json({
             message: "OTP Verified successfully!",
             error: false,
             success: true
@@ -451,22 +461,24 @@ export async function verifyForgotPasswordOtp(req, res) {
 // Reset password controller
 export async function resetPasswordController(req, res) {
     try {
-        const {email, newPassword, confirmPassword} = req.body;
-        if(!email || !newPassword || !confirmPassword){
+        const { email,  newPassword, confirmPassword } = req.body;
+        if (!email || !newPassword || !confirmPassword) {
             return res.status(400).json({
-                message:"Provide required fields email, newPassword, confirmPassword"
+                error: true, 
+                success: false,
+                message: "Provide required fields email, newPassword, confirmPassword"
             })
         }
         const user = await UserModel.findOne({ email: email });
-         if (!user) {
+        if (!user) {
             return res.status(400).json({
                 message: "Email not available",
                 error: true,
                 success: false
             })
         }
-
-         if (newPassword !== confirmPassword) {
+      
+        if (newPassword !== confirmPassword) {
             return res.status(400).json({
                 message: "newPassword and confirmPassword must be same",
                 error: true,
@@ -477,16 +489,13 @@ export async function resetPasswordController(req, res) {
         const salt = await bcryptjs.genSalt(10)
         const hashPassword = await bcryptjs.hash(confirmPassword, salt);
         user.password = hashPassword;
-        await user.save()
-/* 
-        const update = await UserModel.findOneAndUpdate(user._id, {
-            password: hashPassword
-        }) */
-          return res.json({
+        await user.save();
+
+        return res.json({
             message: "Password Updated Successfully",
             error: false,
             success: true,
-           
+
         })
 
 
@@ -500,7 +509,7 @@ export async function resetPasswordController(req, res) {
 }
 
 // Refresh token controller
-export async function refreshTokenController(req,res) {
+export async function refreshTokenController(req, res) {
     try {
         const refreshToken = req.cookies.refreshToken || req?.headers?.authorization?.split(" ")[1]
         if (!refreshToken) {
@@ -511,7 +520,7 @@ export async function refreshTokenController(req,res) {
             })
         }
         const verifyToken = await jwt.verify(refreshToken, process.env.SECRET_KEY_REFRESH_TOKEN);
-          if (!verifyToken) {
+        if (!verifyToken) {
             return res.status(401).json({
                 message: "Token is Expired",
                 error: true,
@@ -529,22 +538,22 @@ export async function refreshTokenController(req,res) {
         res.cookie("accessToken", newAccessToken, cookiesOption);
 
         return res.json({
-                message: "New access token genereated",
-                error: false,
-                success: true,
-                data:{
-                    accessToken: newAccessToken
-                }
-            })
-        
+            message: "New access token genereated",
+            error: false,
+            success: true,
+            data: {
+                accessToken: newAccessToken
+            }
+        })
+
     } catch (error) {
-           return res.status(500).json({
+        return res.status(500).json({
             message: error.message || error,
             error: true,
             success: false
         })
     }
-    }
+}
 
 // Get login user Details
 export async function userDetailsController(req, res) {
@@ -552,13 +561,13 @@ export async function userDetailsController(req, res) {
         const userId = req.userId;
         const user = await UserModel.findById(userId).select('-password -refresh_token');
         return res.json({
-                message: "User Details",
-                data:user,
-                error: false,
-                success: true,
-            })
+            message: "User Details",
+            data: user,
+            error: false,
+            success: true,
+        })
     } catch (error) {
-           return res.status(500).json({
+        return res.status(500).json({
             message: error.message || error,
             error: true,
             success: false
