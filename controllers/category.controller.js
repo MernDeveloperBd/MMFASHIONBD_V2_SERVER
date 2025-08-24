@@ -15,10 +15,10 @@ cloudinary.config({
 
 //Image upload
 var imagesArr = [];
-export async function uploadImagesController(req, res) {
+export async function uploadImagesController(request, response) {
     try {
         imagesArr = [];
-        const image = req.files;
+        const image = request.files;
 
         const options = {
             use_filename: true,
@@ -32,17 +32,17 @@ export async function uploadImagesController(req, res) {
                 options,
                 function (error, result) {
                     imagesArr.push(result.secure_url);
-                    fs.unlinkSync(`uploads/${req.files[i].filename}`);
+                    fs.unlinkSync(`uploads/${request.files[i].filename}`);
                 }
             )
         };
 
-        return res.status(200).json({
+        return response.status(200).json({
             images: imagesArr
         })
 
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -52,33 +52,32 @@ export async function uploadImagesController(req, res) {
 }
 
 //create category
-export async function createCategory(req, res) {
+export async function createCategory(request, response) {
     try {
         let category = new CategoryModel({
-            name: req.body.name,
+            name: request.body.name,
             images: imagesArr,
-            parentId: req.body.parentId,
-            parentCatName: req.body.parentCatName,
+            parentId: request.body.parentId,
+            parentCatName: request.body.parentCatName,
         });
         if (!category) {
-            return res.status(500).json({
+            return response.status(500).json({
                 message: "Category not created",
                 error: true,
                 success: false
             })
         };
-
         category = await category.save();
+        imagesArr =[]
 
-
-        return res.status(200).json({
+        return response.status(200).json({
             message: "Category created",
             error: false,
             success: true,
             category: category
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -87,7 +86,7 @@ export async function createCategory(req, res) {
 }
 
 // Get category
-export async function getCategoryController(req, res) {
+export async function getCategoryController(request, response) {
     try {
         const categories = await CategoryModel.find();
         const categoryMap = {};
@@ -102,7 +101,7 @@ export async function getCategoryController(req, res) {
                 rootCategories.push(categoryMap[cat._id])
             }
         });
-        return res.status(500).json({
+        return response.status(500).json({
             error: false,
             success: true,
             data: rootCategories
@@ -110,7 +109,7 @@ export async function getCategoryController(req, res) {
 
 
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -119,24 +118,24 @@ export async function getCategoryController(req, res) {
 }
 
 // Get Category Count
-export async function getCategoryCountController(req, res) {
+export async function getCategoryCountController(request, response) {
     try {
         const categorycount = await CategoryModel.countDocuments({ parentId: undefined });
         if (!categorycount) {
-            res.status(500).json({ success: false, error: true })
+            response.status(500).json({ success: false, error: true })
         } else {
-            res.send({
+            response.send({
                 categorycount: categorycount
             })
         }
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
         })
     }
-    res.status(200).json({
+    response.status(200).json({
         error: false,
         message: "Category Deleted",
     })
@@ -144,11 +143,11 @@ export async function getCategoryCountController(req, res) {
 }
 
 // Get Sub Category Count
-export async function getSubCategoryCountController(req, res) {
+export async function getSubCategoryCountController(request, response) {
     try {
         const categories = await CategoryModel.find();
         if (!categories) {
-            res.status(500).json({ success: false, error: true })
+            response.status(500).json({ success: false, error: true })
         } else {
             const subCatList = [];
             for (let cat of categories) {
@@ -156,10 +155,10 @@ export async function getSubCategoryCountController(req, res) {
                     subCatList.push(cat)
                 }
             }
-            res.send({ subCtegorycount: subCatList.length })
+            response.send({ subCtegorycount: subCatList.length })
         }
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -168,23 +167,23 @@ export async function getSubCategoryCountController(req, res) {
 }
 
 // get single category
-export async function getSingleCategoryController(req, res) {
+export async function getSingleCategoryController(request, response) {
     try {
-        const category = await CategoryModel.findById(req.params.id);
+        const category = await CategoryModel.findById(request.params.id);
         if (!category) {
-            res.status(500).json({
+            response.status(500).json({
                 message: "The category with the givenid was not found",
                 error: true,
                 success: false
             })
         }
-        return res.status(200).send({
+        return response.status(200).send({
             error: false,
             success: true,
             category: category
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false

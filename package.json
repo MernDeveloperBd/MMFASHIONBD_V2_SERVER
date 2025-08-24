@@ -1,7 +1,7 @@
 {
-  "name": "haramain_khushbo",
+  "name": "MM Fashion World",
   "version": "1.0.0",
-  "description": "Online Shopping shop",
+  "description": "Online Shopping platform for all kinds of fashion and trendy products",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -10,8 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "orbitshift bd",
-    "online shopping"
+    "mmfashion","online shopping"
   ],
   "author": "Md Morad Hossain",
   "license": "ISC",

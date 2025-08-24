@@ -82,7 +82,7 @@ const verifyEmailTemplate = (username, otp) => {
     <div class="container">
       <!-- Logo Section -->
       <div class="logo">
-        <img src="https://i.ibb.co/PZntnvzy/Haramain-khushbo.jpg" alt="Haramain Khushbo Logo">
+        <img src="https://i.ibb.co.com/dw4bR2nX/Misam-Marifa-Fashion-World.png" alt="MM Fashion World Logo">
       </div>
 
       <!-- Header -->
@@ -93,19 +93,17 @@ const verifyEmailTemplate = (username, otp) => {
 
       <!-- Content -->
       <div class="content">
-        <p>Thanks for signing up with <strong>Haramain Khushbo</strong>. To complete your registration, please verify your email using the OTP below:</p>
+        <p>Thanks for signing up with <strong>MM Fashion World</strong>. To complete your registration, please verify your email using the OTP below:</p>
         <div class="otp">${otp}</div>
         <p>If you didn't request this, you can safely ignore this email.</p>
       </div>
 
       <!-- Footer -->
       <div class="footer">
-        <p>&copy; 2025 Haramain Khushbo. All rights reserved.</p>
+        <p>&copy; 2025 MM Fashion World. All rights reserved.</p>
         <div class="social-links">
-          <a href="https://facebook.com/yourpage"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook"></a>
-          <a href="https://twitter.com/yourpage"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter"></a>
-          <a href="https://instagram.com/yourpage"><img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram"></a>
-          <a href="https://linkedin.com/company/yourpage"><img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn"></a>
+          <a href="https://www.facebook.com/MisamMarifaFashionWorld"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook"></a>
+         
         </div>
       </div>
     </div>

@@ -4,7 +4,15 @@ const addressSchema =new mongoose.Schema({
         type:String,
         default: ""
     },
-    city:{
+    division:{
+        type:String,
+        default: ""
+    },
+    district:{
+        type:String,
+        default: ""
+    },
+    upazila:{
         type:String,
         default: ""
     },
@@ -37,7 +45,6 @@ const addressSchema =new mongoose.Schema({
 },
 {
     timestamps:true
-
 })
 
 const AddressModal = mongoose.model("address", addressSchema)

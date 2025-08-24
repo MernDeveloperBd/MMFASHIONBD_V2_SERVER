@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import 'dotenv/config'
+import dotenv from 'dotenv'
+dotenv.config()
+// import 'dotenv/config' 
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
@@ -16,7 +18,7 @@ import addressRouter from './route/address.route.js';
 const app = express();
 const port = process.env.PORT || 5000 ;
 
-connectDB()
+// connectDB()
 
 // Middleware
 app.use(cors())
@@ -29,6 +31,14 @@ app.use(helmet({
     crossOriginResourcePolicy: false
 }))
 
+/*  const productsCollection = client.db("MMFASHIONBD").collection("Products");
+    const usersCollection = client.db("MMFASHIONBD").collection("users");
+    const ordersCollection = client.db("MMFASHIONBD").collection("orders");
+    const contactMessageCollection = client.db("MMFASHIONBD").collection("contact-message");
+    const reviewssCollection = client.db("MMFASHIONBD").collection("reviews");
+    const cartsCollection = client.db("MMFASHIONBD").collection("carts"); */
+
+
 // api
 app.use('/api/user', userRouter)
 app.use('/api/category', categoryRouter)
@@ -38,9 +48,17 @@ app.use('/api/myList', myListRouter )
 app.use('/api/address', addressRouter)
 
 
-app.get('/', (req, res)=>{
-    res.send("Haramain Khushbo server is running")
+app.get('/', (request, response)=>{
+    response.json({
+        message: `MM Fashion world is running on Port ${port}`
+    })
 })
-app.listen(port, ()=>{
-    console.log(`Haramain khushbo is running on port: ${port}`);
+/* app.listen(port, ()=>{
+    console.log(`MM Fashion world is running on port: ${port}`);
+}) */
+
+connectDB().then(() =>{
+    app.listen(port, ()=>{
+    console.log(`MM Fashion world Server is running on port: ${port}`);
+})
 })

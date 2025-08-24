@@ -1,11 +1,11 @@
 import http from 'http'
 import nodemailer from 'nodemailer'
-import dotenv from 'dotenv';
-dotenv.config();
+ import dotenv from 'dotenv';
+dotenv.config(); 
 
 //configure the SMTP transporter
 const transporter = nodemailer.createTransport({
-    host:'smtp.gmail.com', //e.g.smtp.gmail.com for gmail
+    host:'smtp.gmail.com',
     port:465,
     secure:true, //true for port 465, false for other port
     auth:{

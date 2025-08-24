@@ -49,51 +49,52 @@ export async function uploadImagesController(req, res) {
 }
 
 // Create Product
-export async function createProduct(req, res) {
+export async function createProduct(request, response) {
     try {
 
         let product = new ProductModel({
-            name: req.body.name,
-            description: req.body.description,
+            title: request.body.title,
+            description: request.body.description,
             images: imagesArr,
-            brand: req.body.brand,
-            price: req.body.price,
-            oldPrice: req.body.oldPrice,
-            catName: req.body.catName,
-            catId: req.body.catId,
-            subCat: req.body.subCat,
-            subCatId: req.body.subCatId,
-            thirdSubCat: req.body.thirdSubCat,
-            thirdSubCatId: req.body.thirdSubCatId,
-            category: req.body.category,
-            countInStock: req.body.countInStock,
-            rating: req.body.rating,
-            isFeatured: req.body.isFeatured,
-            discount: req.body.discount,
-            productRam: req.body.productRam,
-            size: req.body.size,
-            productWeight: req.body.productWeight,
-            location: req.body.location,
-            dateCreated: req.body.dateCreated,
+            brand: request.body.brand,
+            shopName: request.body.shopName,
+            facebookURL: request.body.facebookURL,
+            price: request.body.price,
+            oldPrice: request.body.oldPrice,
+            catName: request.body.catName,
+            catId: request.body.catId,
+            subCat: request.body.subCat,
+            subCatId: request.body.subCatId,
+            thirdSubCat: request.body.thirdSubCat,
+            thirdSubCatId: request.body.thirdSubCatId,
+            category: request.body.category,
+            countInStock: request.body.countInStock,
+            rating: request.body.rating,
+            isFeatured: request.body.isFeatured,
+            discount: request.body.discount,
+            size: request.body.size,
+            productWeight: request.body.productWeight,
+            location: request.body.location,
+            dateCreated: request.body.dateCreated,
         });
         product = await product.save()
         if (!product) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false,
-                message: "Product no created"
+                message: "Product not uploaded"
             })
         }
         imagesArr = []
-        res.status(200).json({
-            message: "Product created Successfully",
+        response.status(200).json({
+            message: "Product Uploaded Successfully",
             error: false,
             success: true,
             product: product
         })
 
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -102,13 +103,15 @@ export async function createProduct(req, res) {
 }
 
 // Get all products
-export async function getAllProducts(req, res) {
+export async function getAllProducts(request, response) {
     try {
 
-        const page = parseInt(req.query.page) || 1;
-        const perPage = parseInt(req.query.perPage);
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage);
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
+        console.log(typeof totalPages);
+        
         if (page > totalPages) {
             return res.status(404).json({
                 message: "Page not found",
@@ -116,18 +119,18 @@ export async function getAllProducts(req, res) {
                 error: true
             })
         }
-
         const products = await ProductModel.find().populate("category")
             .skip((page - 1) * perPage)
             .limit(perPage)
             .exec();
+
         if (!products) {
-            res.status(500).json({
+            return response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        res.status(200).json({
+        response.status(200).json({
             error: false,
             success: true,
             products: products,
@@ -135,7 +138,7 @@ export async function getAllProducts(req, res) {
             page: page
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -143,15 +146,15 @@ export async function getAllProducts(req, res) {
     }
 }
 // Get all products by Category id
-export async function getAllProductsByCatId(req, res) {
+export async function getAllProductsByCatId(request, response) {
     try {
 
-        const page = parseInt(req.query.page) || 1;
-        const perPage = parseInt(req.query.perPage) || 10000;
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage) || 10000;
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
         if (page > totalPages) {
-            return res.status(404).json({
+            return response.status(404).json({
                 message: "Page not found",
                 success: false,
                 error: true
@@ -159,26 +162,27 @@ export async function getAllProductsByCatId(req, res) {
         }
 
         const products = await ProductModel.find({
-            catId: req.params.id
+            catId: request.params.id
         }).populate("category")
             .skip((page - 1) * perPage)
             .limit(perPage)
             .exec();
         if (!products) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        res.status(200).json({
+        response.status(200).json({
             error: false,
             success: true,
             products: products,
             totalPages: totalPages,
+            totalPosts: totalPosts,
             page: page
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -230,15 +234,15 @@ export async function getAllProductsByCatName(req, res) {
 }
 
 // Get all products by Sub Category id
-export async function getAllProductsBySubCatId(req, res) {
+export async function getAllProductsBySubCatId(request, response) {
     try {
 
-        const page = parseInt(req.query.page) || 1;
-        const perPage = parseInt(req.query.perPage) || 10000;
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage) || 10000;
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
         if (page > totalPages) {
-            return res.status(404).json({
+            return response.status(404).json({
                 message: "Page not found",
                 success: false,
                 error: true
@@ -246,18 +250,18 @@ export async function getAllProductsBySubCatId(req, res) {
         }
 
         const products = await ProductModel.find({
-            subCatId: req.params.id
+            subCatId: request.params.id
         }).populate("category")
             .skip((page - 1) * perPage)
             .limit(perPage)
             .exec();
         if (!products) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        res.status(200).json({
+        response.status(200).json({
             error: false,
             success: true,
             products: products,
@@ -265,7 +269,7 @@ export async function getAllProductsBySubCatId(req, res) {
             page: page
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -273,15 +277,15 @@ export async function getAllProductsBySubCatId(req, res) {
     }
 }
 // Get all products by sub category name
-export async function getAllProductsBySubCatName(req, res) {
+export async function getAllProductsBySubCatName(request, response) {
     try {
 
-        const page = parseInt(req.query.page) || 1;
-        const perPage = parseInt(req.query.perPage) || 10000;
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage) || 10000;
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
         if (page > totalPages) {
-            return res.status(404).json({
+            return response.status(404).json({
                 message: "Page not found",
                 success: false,
                 error: true
@@ -289,18 +293,18 @@ export async function getAllProductsBySubCatName(req, res) {
         }
 
         const products = await ProductModel.find({
-            subCat: req.query.subCat
+            subCat: request.query.subCat
         }).populate("category")
             .skip((page - 1) * perPage)
             .limit(perPage)
             .exec();
         if (!products) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        res.status(200).json({
+        response.status(200).json({
             error: false,
             success: true,
             products: products,
@@ -308,7 +312,7 @@ export async function getAllProductsBySubCatName(req, res) {
             page: page
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -316,7 +320,7 @@ export async function getAllProductsBySubCatName(req, res) {
     }
 }
 // Get all products by Third level Category id
-export async function getAllProductsByThirdLevelCatId(req, res) {
+export async function getAllProductsByThirdLevelCatId(request, response) {
     try {
 
         const page = parseInt(req.query.page) || 1;
@@ -324,7 +328,7 @@ export async function getAllProductsByThirdLevelCatId(req, res) {
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
         if (page > totalPages) {
-            return res.status(404).json({
+            return response.status(404).json({
                 message: "Page not found",
                 success: false,
                 error: true
@@ -338,12 +342,12 @@ export async function getAllProductsByThirdLevelCatId(req, res) {
             .limit(perPage)
             .exec();
         if (!products) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        res.status(200).json({
+        response.status(200).json({
             error: false,
             success: true,
             products: products,
@@ -351,7 +355,7 @@ export async function getAllProductsByThirdLevelCatId(req, res) {
             page: page
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -359,15 +363,15 @@ export async function getAllProductsByThirdLevelCatId(req, res) {
     }
 }
 // Get all products by ThirdLevel category name
-export async function getAllProductsByThirdLevelCatName(req, res) {
+export async function getAllProductsByThirdLevelCatName(request, response) {
     try {
 
-        const page = parseInt(req.query.page) || 1;
-        const perPage = parseInt(req.query.perPage) || 10000;
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage) || 10000;
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
         if (page > totalPages) {
-            return res.status(404).json({
+            return response.status(404).json({
                 message: "Page not found",
                 success: false,
                 error: true
@@ -375,18 +379,18 @@ export async function getAllProductsByThirdLevelCatName(req, res) {
         }
 
         const products = await ProductModel.find({
-            thirdSubCat: req.query.thirdSubCat
+            thirdSubCat: request.query.thirdSubCat
         }).populate("category")
             .skip((page - 1) * perPage)
             .limit(perPage)
             .exec();
         if (!products) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        res.status(200).json({
+        response.status(200).json({
             error: false,
             success: true,
             products: products,
@@ -394,7 +398,7 @@ export async function getAllProductsByThirdLevelCatName(req, res) {
             page: page
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -402,37 +406,37 @@ export async function getAllProductsByThirdLevelCatName(req, res) {
     }
 }
 // Get all products by Price
-export async function getAllProductsByPrice(req, res) {
+export async function getAllProductsByPrice(request, response) {
     let productList = []
-    if (req.query.catId !== "" && req.query.catId !== undefined) {
+    if (request.query.catId !== "" && request.query.catId !== undefined) {
         const productListArr = await ProductModel.find({
-            catId: req.query.catId,
+            catId: request.query.catId,
         }).populate("category");
         productList = productListArr
     }
-    if (req.query.subCatId !== "" && req.query.subCatId !== undefined) {
+    if (request.query.subCatId !== "" && request.query.subCatId !== undefined) {
         const productListArr = await ProductModel.find({
-            subCatId: req.query.subCatId,
+            subCatId: request.query.subCatId,
         }).populate("category");
         productList = productListArr
     }
-    if (req.query.thirdSubCatId !== "" && req.query.thirdSubCatId !== undefined) {
+    if (request.query.thirdSubCatId !== "" && request.query.thirdSubCatId !== undefined) {
         const productListArr = await ProductModel.find({
-            thirdSubCatId: req.query.thirdSubCatId,
+            thirdSubCatId: request.query.thirdSubCatId,
         }).populate("category");
         productList = productListArr
     }
 
     const filteredProducts = productList.filter((product) => {
-        if (req.query.minPrice && product.price < parseInt(+req.query.minPrice)) {
+        if (request.query.minPrice && product.price < parseInt(+request.query.minPrice)) {
             return false;
         }
-        if (req.query.maxPrice && product.price > parseInt(+req.query.maxPrice)) {
+        if (request.query.maxPrice && product.price > parseInt(+request.query.maxPrice)) {
             return false;
         }
         return true;
     });
-    return res.status(200).json({
+    return response.status(200).json({
         error: false,
         success: true,
         products: filteredProducts,

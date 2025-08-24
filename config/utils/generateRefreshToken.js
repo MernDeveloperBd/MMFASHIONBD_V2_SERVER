@@ -9,4 +9,4 @@ const generatedRefreshToken = async (userId) =>{
     )
     return token
 }
-export default generatedRefreshToken;
+export default generatedRefreshToken; 
