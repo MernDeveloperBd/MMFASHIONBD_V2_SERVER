@@ -31,13 +31,6 @@ app.use(helmet({
     crossOriginResourcePolicy: false
 }))
 
-/*  const productsCollection = client.db("MMFASHIONBD").collection("Products");
-    const usersCollection = client.db("MMFASHIONBD").collection("users");
-    const ordersCollection = client.db("MMFASHIONBD").collection("orders");
-    const contactMessageCollection = client.db("MMFASHIONBD").collection("contact-message");
-    const reviewssCollection = client.db("MMFASHIONBD").collection("reviews");
-    const cartsCollection = client.db("MMFASHIONBD").collection("carts"); */
-
 
 // api
 app.use('/api/user', userRouter)

@@ -8,7 +8,7 @@ const addressSchema =new mongoose.Schema({
         type:String,
         default: ""
     },
-    district:{
+    city:{
         type:String,
         default: ""
     },
@@ -20,7 +20,7 @@ const addressSchema =new mongoose.Schema({
     type: String,
     default: ""
    },
-   pincode:{
+   postCode:{
     type: String
    },
    country:{
@@ -39,7 +39,7 @@ const addressSchema =new mongoose.Schema({
     default: true
    },
    userId:{
-    type:String,  //mongoose.Schema.ObjectId ( or prev )
+    type:mongoose.Schema.ObjectId,
     default:""
    }
 },

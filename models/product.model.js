@@ -35,6 +35,10 @@ const productSchema = new mongoose.Schema({
         type:Number,
         default: 0,
     },
+     resellingPrice:{
+        type:Number,
+        default: 0,
+    },
      catName:{
         type:String,
         default: "",

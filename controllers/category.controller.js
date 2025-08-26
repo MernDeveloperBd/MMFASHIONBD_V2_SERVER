@@ -101,7 +101,7 @@ export async function getCategoryController(request, response) {
                 rootCategories.push(categoryMap[cat._id])
             }
         });
-        return response.status(500).json({
+        return response.status(200).json({
             error: false,
             success: true,
             data: rootCategories
@@ -192,8 +192,8 @@ export async function getSingleCategoryController(request, response) {
 }
 
 // remove image
-export async function removeImageFromCloudinary(req, res) {
-    const imgUrl = req.query.img;
+export async function removeImageFromCloudinary(request, response) {
+    const imgUrl = request.query.img;
 
     const urlArr = imgUrl.split("/");
     const image = urlArr[urlArr.length - 1];
@@ -207,7 +207,11 @@ export async function removeImageFromCloudinary(req, res) {
             }
         );
         if (result) {
-            res.status(200).send(result)
+            return response.status(200).json({
+                errro:false,
+                success: true,
+                message:"Image Deleted successfully"
+            })
         }
     }
 }
@@ -265,7 +269,6 @@ export async function deleteCategoryController(req, res) {
 // Update category
 
 export async function updateCategoryController(req, res) {
-    console.log(imagesArr);
     
     const category = await CategoryModel.findByIdAndUpdate(req.params.id, 
         {

@@ -1,10 +1,10 @@
 import MyListModel from "../models/myList.model.js";
 
 // add to my list
-export const AddToMyListController = async(req, res)=>{
+export const AddToMyListController = async(request, response)=>{
     try {
-        const userId = req.userId; //middleware
-        const{productId, productTitle, image, rating, price, oldPrice, brand, discount} = req.body;
+        const userId = request.userId; //middleware
+        const{productId, productTitle, image, rating, price, oldPrice, resellingPrice, catName, discount} = request.body;
 
         const item = await MyListModel.findOne({
             userId: userId,
@@ -13,22 +13,23 @@ export const AddToMyListController = async(req, res)=>{
 console.log(item);
 
         if(item){
-            return res.status(400).json({
-                message: "Item already in My LIst",
+            return response.status(400).json({
+                message: "Item already in My List",
             })
         }
         const myList = new MyListModel({
-            productId, productTitle, image, rating, price, oldPrice, brand, discount, userId
+            productId,userId, productTitle, image, rating, price, oldPrice, resellingPrice,catName, discount
         })
         const save = await myList.save();
-         return res.status(200).json({
+
+         return response.status(200).json({
             message: "The product added in my list",
             error: false,
             success: true
         })
 
     } catch (error) {
-         return res.status(500).json({
+         return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false

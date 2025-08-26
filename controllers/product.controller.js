@@ -61,6 +61,7 @@ export async function createProduct(request, response) {
             facebookURL: request.body.facebookURL,
             price: request.body.price,
             oldPrice: request.body.oldPrice,
+            resellingPrice: request.body.resellingPrice,
             catName: request.body.catName,
             catId: request.body.catId,
             subCat: request.body.subCat,
@@ -110,7 +111,6 @@ export async function getAllProducts(request, response) {
         const perPage = parseInt(request.query.perPage);
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
-        console.log(typeof totalPages);
         
         if (page > totalPages) {
             return res.status(404).json({
@@ -447,56 +447,55 @@ export async function getAllProductsByPrice(request, response) {
 }
 
 // Get all products by Ratings
-export async function getAllProductsByRating(req, res) {
+export async function getAllProductsByRating(request, response) {
     try {
 
-        const page = parseInt(req.query.page) || 1;
-        const perPage = parseInt(req.query.perPage) || 10000;
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage) || 10000;
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
         if (page > totalPages) {
-            return res.status(404).json({
+            return response.status(404).json({
                 message: "Page not found",
                 success: false,
                 error: true
             })
         }
-        console.log("raing", req.query.catId);
         let products = [];
-        if (req.query.catId !== undefined) {
+        if (request.query.catId !== undefined) {
             products = await ProductModel.find({
-                rating: req.query.rating,
-                catId: req.query.catId,
+                rating: request.query.rating,
+                catId: request.query.catId,
             }).populate("category")
                 .skip((page - 1) * perPage)
                 .limit(perPage)
                 .exec();
         }
-        if (req.query.subCatId !== undefined) {
+        if (request.query.subCatId !== undefined) {
             products = await ProductModel.find({
-                rating: req.query.rating,
-                subCatId: req.query.subCatId,
+                rating: request.query.rating,
+                subCatId: request.query.subCatId,
             }).populate("category")
                 .skip((page - 1) * perPage)
                 .limit(perPage)
                 .exec();
         }
-        if (req.query.thirdSubCat !== undefined) {
+        if (request.query.thirdSubCat !== undefined) {
             products = await ProductModel.find({
-                rating: req.query.rating,
-                thirdSubCat: req.query.thirdSubCat,
+                rating: request.query.rating,
+                thirdSubCat: request.query.thirdSubCat,
             }).populate("category")
                 .skip((page - 1) * perPage)
                 .limit(perPage)
                 .exec();
         }
         if (!products) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        res.status(200).json({
+        response.status(200).json({
             error: false,
             success: true,
             products: products,
@@ -504,7 +503,7 @@ export async function getAllProductsByRating(req, res) {
             page: page
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -512,22 +511,22 @@ export async function getAllProductsByRating(req, res) {
     }
 }
 // Get all Products Count
-export async function getAllProductsCount(req, res) {
+export async function getAllProductsCount(request, response) {
     try {
         const productsCount = await ProductModel.countDocuments();
         if (!productsCount) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        return res.status(200).json({
+        return response.status(200).json({
             error: false,
             success: true,
             productsCount: productsCount
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -535,26 +534,26 @@ export async function getAllProductsCount(req, res) {
     }
 }
 // Get all Featured products
-export async function getAllFeaturedProducts(req, res) {
+export async function getAllFeaturedProducts(request, response) {
     try {
 
         const products = await ProductModel.find({
             isFeatured: true
         }).populate("category");
         if (!products) {
-            res.status(500).json({
+            response.status(500).json({
                 error: true,
                 success: false
             })
         }
-        res.status(200).json({
+        response.status(200).json({
             error: false,
             success: true,
             products: products
 
         })
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -563,10 +562,10 @@ export async function getAllFeaturedProducts(req, res) {
 }
 
 // Get all Delete product
-export async function deleteProduct(req, res) {
-    const product = await ProductModel.findById(req.params.id).populate("category")
+export async function deleteProduct(request, response) {
+    const product = await ProductModel.findById(request.params.id).populate("category")
     if (!product) {
-        return res.status(404).json({
+        return response.status(404).json({
             message: "Product not found",
             success: false,
             error: true
@@ -586,15 +585,15 @@ export async function deleteProduct(req, res) {
             })
         }
     }
-    const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
+    const deletedProduct = await ProductModel.findByIdAndDelete(request.params.id);
     if (!deletedProduct) {
-        res.status(404).json({
+        response.status(404).json({
             message: "Product not Deleted",
             success: false,
             error: true
         })
     }
-    return res.status(200).json({
+    return response.status(200).json({
         message: "Product Deleted",
         success: true,
         error: false
@@ -603,17 +602,17 @@ export async function deleteProduct(req, res) {
 }
 
 // Get single product
-export async function getSingleProduct(req, res) {
+export async function getSingleProduct(request, response) {
     try {
-        const product = await ProductModel.findById(req.params.id).populate("category")
+        const product = await ProductModel.findById(request.params.id).populate("category")
         if (!product) {
-            return res.status(404).json({
-                message: "The Product is not found",
+            return response.status(404).json({
+                message: "This Product is not found",
                 success: false,
                 error: true
             })
         }
-         return res.status(200).json({
+         return response.status(200).json({
         success: true,
         error: false,
         product: product        
@@ -621,7 +620,7 @@ export async function getSingleProduct(req, res) {
     })
 
     } catch (error) {
-        return res.status(500).json({
+        return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false
@@ -652,50 +651,53 @@ export async function removeImageFromCloudinary(req, res) {
 }
 
 // Updated Product
-export async function updateProduct(req, res) {
+export async function updateProduct(request, response ){
     try {
         const product = await ProductModel.findByIdAndUpdate(
-            req.params.id,
+            request.params.id,
              {
-            name: req.body.name,
-            description: req.body.description,
-            images: req.body.images,
-            brand: req.body.brand,
-            price: req.body.price,
-            oldPrice: req.body.oldPrice,
-            catName: req.body.catName,
-            catId: req.body.catId,
-            subCat: req.body.subCat,
-            subCatId: req.body.subCatId,
-            thirdSubCat: req.body.thirdSubCat,
-            thirdSubCatId: req.body.thirdSubCatId,
-            category: req.body.category,
-            countInStock: req.body.countInStock,
-            rating: req.body.rating,
-            isFeatured: req.body.isFeatured,
-            discount: req.body.discount,
-            productRam: req.body.productRam,
-            size: req.body.size,
-            productWeight: req.body.productWeight,
-            location: req.body.location,
+              title: request.body.title,
+            description: request.body.description,
+            images: imagesArr,
+            brand: request.body.brand,
+            shopName: request.body.shopName,
+            facebookURL: request.body.facebookURL,
+            price: request.body.price,
+            oldPrice: request.body.oldPrice,
+            resellingPrice: request.body.resellingPrice,
+            catName: request.body.catName,
+            catId: request.body.catId,
+            subCat: request.body.subCat,
+            subCatId: request.body.subCatId,
+            thirdSubCat: request.body.thirdSubCat,
+            thirdSubCatId: request.body.thirdSubCatId,
+            category: request.body.category,
+            countInStock: request.body.countInStock,
+            rating: request.body.rating,
+            isFeatured: request.body.isFeatured,
+            discount: request.body.discount,
+            size: request.body.size,
+            productWeight: request.body.productWeight,
+            location: request.body.location,
+            dateCreated: request.body.dateCreated,
         },{
             new: true
         }
         );
         if(!product){
-            return res.status(404).json({
+            return response.status(404).json({
                 message: "The product cannot be updated",
                 status: false,
             })
         }
         imagesArr = []
-        return res.status(200).json({
+        return response.status(200).json({
             message: "The product is updated",
             error: false,
             success: true,
         })
     } catch (error) {
-         return res.status(500).json({
+         return response.status(500).json({
             message: error.message || error,
             error: true,
             success: false

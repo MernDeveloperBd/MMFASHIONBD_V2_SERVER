@@ -143,13 +143,7 @@ export async function loginUserController(request, response) {
                 success: false
             })
         }
-        if (user.verify_email !== true) {
-            return response.status(400).json({
-                message: "Your Email is not verified. Please verify your email",
-                error: true,
-                success: false
-            })
-        }
+     
         const checkPassword = await bcryptjs.compare(password, user.password);
         if (!checkPassword) {
             return response.status(400).json({
@@ -261,8 +255,7 @@ export async function userAvatarController(request, response) {
             const img = await cloudinary.uploader.upload(
                 image[i].path,
                 options,
-                function (error, result) {
-                    console.log(result)                    
+                function (error, result) {                   
                     imagesArr.push(result?.secure_url);
                     fs.unlinkSync(`uploads/${request.files[i].filename}`);                                      
                 }
@@ -355,14 +348,13 @@ export async function updateUserDetails(request, response) {
             message: "User Updated Successfully",
             error: false,
             success: true,
-            user: updateUser
-          /*   user: {
+           user: {
                 name: updateUser?.name,
                 _id: updateUser?._id,
                 email: updateUser?.email,
                 mobile: updateUser?.mobile,
                 avatar: updateUser?.avatar,
-            } */
+            } 
         })
 
 
@@ -378,9 +370,7 @@ export async function updateUserDetails(request, response) {
 export async function forgotPasswordController(request, response) {
     try {
         const { email } = request.body;
-        const user = await UserModel.findOne({ email: email });
-        console.log(user);
-        
+        const user = await UserModel.findOne({ email: email });        
 
         if (!user) {
             return response.status(400).json({

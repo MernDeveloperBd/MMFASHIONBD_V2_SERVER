@@ -28,7 +28,11 @@ const myListSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    brand:{
+    resellingPrice:{
+        type: Number,
+        required: true
+    },
+    catName:{
         type: String,
         required: true
     },

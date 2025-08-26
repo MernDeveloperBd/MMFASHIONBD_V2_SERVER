@@ -58,7 +58,7 @@ export const getCartItemController = async (req, res) => {
             userId: userId,
         }).populate('productId')
 
-        return res.json({
+        return res.status(200).json({
             data: cartItem,
             error: false,
             success: true
@@ -97,7 +97,6 @@ export const updateCartItemQtyController = async (req, res) => {
             success: true,
             data: updatedCartItem
         })
-
 
     } catch (error) {
         return res.status(500).json({
