@@ -39,15 +39,11 @@ const productSchema = new mongoose.Schema({
         type:Number,
         default: 0,
     },
-     quantity:{
-        type:Number,
-        default: 0,
-    },
-     discount:{
-        type:Number,
-        default: 0,
-    },
      whatsApp:{
+        type:Number,
+        default: 0,
+    },
+     sale:{
         type:Number,
         default: 0,
     },
@@ -91,10 +87,6 @@ const productSchema = new mongoose.Schema({
      isFeatured:{
         type:Boolean,
         default: false,
-    },
-     discount:{
-        type:Number,
-        required: true,
     },
     productSize:[{
         type:String,

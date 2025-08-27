@@ -109,7 +109,7 @@ export async function uploadImagesController(req, res) {
     let product = new ProductModel({
       ...req.body,
       isFeatured: req.body.isFeatured === "true" || req.body.isFeatured === true,
-      images: imagesArr,   // শুধু images আলাদা করে সেট করা হলো
+      images: imagesArr,  
     });
 
     product = await product.save();
@@ -358,8 +358,8 @@ export async function getAllProductsBySubCatName(request, response) {
 export async function getAllProductsByThirdLevelCatId(request, response) {
     try {
 
-        const page = parseInt(req.query.page) || 1;
-        const perPage = parseInt(req.query.perPage) || 10000;
+        const page = parseInt(request.query.page) || 1;
+        const perPage = parseInt(request.query.perPage) || 10000;
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
         if (page > totalPages) {
@@ -371,7 +371,7 @@ export async function getAllProductsByThirdLevelCatId(request, response) {
         }
 
         const products = await ProductModel.find({
-            thirdSubCatId: req.params.id
+            thirdSubCatId: request.params.id
         }).populate("category")
             .skip((page - 1) * perPage)
             .limit(perPage)
@@ -636,6 +636,48 @@ export async function deleteProduct(request, response) {
 
 }
 
+// Get all Delete Multiple product
+export async function deleteMultipleProduct(request, response) {
+  const {ids} = request.body;
+  if(!ids || !Array.isArray(ids)){
+    return response.status(400).json({error:true, success:false,message:'invalid input'})
+  }
+  for(let i = 0; i<ids.length;i++){
+    const product = await ProductModel.findById(ids[i])
+     const images = product.images;
+     let img = "";
+      for (img of images) {
+        const imgUrl = img;
+        const urlArr = imgUrl.split('/');
+        const image = urlArr[urlArr.length - 1];
+
+        const imageName = image.split(".")[0]
+        if (imageName) {
+            cloudinary.uploader.destroy(imageName, (error, result) => {
+
+            })
+        }
+    }
+  }
+
+  try {
+    await ProductModel.deleteMany({_id:{$in: ids}})
+    return response.status(200).json({
+        message: "Products Deleted successfully done",
+        success: true,
+        error: false
+    })
+  } catch (error) {
+    response.status(404).json({
+            message: "Product not Deleted",
+            success: false,
+            error: true
+        })
+  }
+   
+
+}
+
 // Get single product
 export async function getSingleProduct(request, response) {
     try {
@@ -743,12 +785,16 @@ export async function removeImageFromCloudinary(req, res) {
 //new
 export async function updateProduct(req, res) {
   try {
+    const updateFields = { ...req.body };
+
+    // Ensure images is always an array
+    if (!Array.isArray(updateFields.images)) {
+      updateFields.images = [];
+    }
+
     const product = await ProductModel.findByIdAndUpdate(
       req.params.id,
-      {
-        ...req.body,       // body থেকে সব ফিল্ড অটো আসবে
-        images: imagesArr, // শুধু images override করা হলো
-      },
+      updateFields,
       { new: true }
     );
 
@@ -760,7 +806,6 @@ export async function updateProduct(req, res) {
       });
     }
 
-    imagesArr = [];
     return res.status(200).json({
       message: "The product is updated",
       success: true,
@@ -775,4 +820,3 @@ export async function updateProduct(req, res) {
     });
   }
 }
-

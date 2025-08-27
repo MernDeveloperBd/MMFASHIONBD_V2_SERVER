@@ -1,6 +1,6 @@
 import { Router } from "express";
 import upload from "../middleware/multer.js";
-import { createProduct, deleteProduct, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getAllProductsByThirdLevelCatId, getAllProductsByThirdLevelCatName, getAllProductsCount, getSingleProduct, removeImageFromCloudinary, updateProduct, uploadImagesController } from "../controllers/product.controller.js";
+import { createProduct, deleteMultipleProduct, deleteProduct, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getAllProductsByThirdLevelCatId, getAllProductsByThirdLevelCatName, getAllProductsCount, getSingleProduct, removeImageFromCloudinary, updateProduct, uploadImagesController } from "../controllers/product.controller.js";
 import auth from "../middleware/auth.js";
 
 const productRouter = Router()
@@ -20,6 +20,7 @@ productRouter.get('/getAllFeaturedProducts', getAllFeaturedProducts)
 productRouter.delete('/:id', deleteProduct)
 productRouter.get('/:id', getSingleProduct)
 productRouter.delete('/deleteImage', auth, removeImageFromCloudinary)
+productRouter.delete('/deleteMultipleImages', auth, deleteMultipleProduct)
 productRouter.put('/updateProduct/:id', auth, updateProduct)
 
 export default productRouter;
