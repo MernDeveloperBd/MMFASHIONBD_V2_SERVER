@@ -48,12 +48,13 @@ export async function uploadImagesController(req, res) {
 
 }
 
-// Create Product
-export async function createProduct(request, response) {
+// Create Product 
+//previous
+/* export async function createProduct(request, response) {
     try {
 
         let product = new ProductModel({
-            title: request.body.title,
+            title: request.body.name,
             description: request.body.description,
             images: imagesArr,
             brand: request.body.brand,
@@ -101,6 +102,40 @@ export async function createProduct(request, response) {
             success: false
         })
     }
+} */
+
+    export async function createProduct(req, res) {
+  try {
+    let product = new ProductModel({
+      ...req.body,
+      isFeatured: req.body.isFeatured === "true" || req.body.isFeatured === true,
+      images: imagesArr,   // শুধু images আলাদা করে সেট করা হলো
+    });
+
+    product = await product.save();
+
+    if (!product) {
+      return res.status(500).json({
+        error: true,
+        success: false,
+        message: "Product not uploaded"
+      });
+    }
+
+    imagesArr = [];
+    res.status(200).json({
+      message: "Product Uploaded Successfully",
+      error: false,
+      success: true,
+      product
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false
+    });
+  }
 }
 
 // Get all products
@@ -651,7 +686,8 @@ export async function removeImageFromCloudinary(req, res) {
 }
 
 // Updated Product
-export async function updateProduct(request, response ){
+// previous
+/* export async function updateProduct(request, response ){
     try {
         const product = await ProductModel.findByIdAndUpdate(
             request.params.id,
@@ -703,4 +739,40 @@ export async function updateProduct(request, response ){
             success: false
         })
     }
+} */
+//new
+export async function updateProduct(req, res) {
+  try {
+    const product = await ProductModel.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...req.body,       // body থেকে সব ফিল্ড অটো আসবে
+        images: imagesArr, // শুধু images override করা হলো
+      },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        message: "The product cannot be updated",
+        success: false,
+        error: true,
+      });
+    }
+
+    imagesArr = [];
+    return res.status(200).json({
+      message: "The product is updated",
+      success: true,
+      error: false,
+      product,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
 }
+

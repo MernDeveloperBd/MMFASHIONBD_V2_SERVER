@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
-    title:{
+    name:{
         type:String,
         required: true,
     },
@@ -39,6 +39,18 @@ const productSchema = new mongoose.Schema({
         type:Number,
         default: 0,
     },
+     quantity:{
+        type:Number,
+        default: 0,
+    },
+     discount:{
+        type:Number,
+        default: 0,
+    },
+     whatsApp:{
+        type:Number,
+        default: 0,
+    },
      catName:{
         type:String,
         default: "",
@@ -55,7 +67,6 @@ const productSchema = new mongoose.Schema({
         type:String,
         default: "",
     },
-    
      thirdSubCat:{
         type:String,
         default: "",
@@ -63,11 +74,11 @@ const productSchema = new mongoose.Schema({
      thirdSubCatId:{
         type:String,
         default: "",
-    },
+    },  
+    
     category:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"Category",
-        
+        ref:"Category",        
     },
     countInStock:{
         type:Number,
@@ -85,7 +96,11 @@ const productSchema = new mongoose.Schema({
         type:Number,
         required: true,
     },
-    size:[{
+    productSize:[{
+        type:String,
+        default: null,
+    }],
+    color:[{
         type:String,
         default: null,
     }],
