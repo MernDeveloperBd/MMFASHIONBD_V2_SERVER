@@ -51,6 +51,10 @@ const productSchema = new mongoose.Schema({
         type:String,
         default: "",
     },
+     sku:{
+        type:String,
+        default: "",
+    },
      catId:{
         type:String,
         default: "",

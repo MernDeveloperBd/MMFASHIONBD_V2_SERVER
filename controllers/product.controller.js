@@ -1,6 +1,9 @@
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 import ProductModel from '../models/product.model.js';
+import ProductSizeModel from '../models/productSize.model.js';
+import ProductColorModel from '../models/productColor.model.js';
+import { request } from 'http';
 
 // ✅ Cloudinary config
 cloudinary.config({
@@ -104,39 +107,40 @@ export async function uploadImagesController(req, res) {
     }
 } */
 
-    export async function createProduct(req, res) {
-  try {
-    let product = new ProductModel({
-      ...req.body,
-      isFeatured: req.body.isFeatured === "true" || req.body.isFeatured === true,
-      images: imagesArr,  
-    });
+export async function createProduct(req, res) {
+    try {
+        let product = new ProductModel({
+            ...req.body,
+            isFeatured: req.body.isFeatured === "true" || req.body.isFeatured === true,
+            images: imagesArr,
+        });
 
-    product = await product.save();
+        product = await product.save();
 
-    if (!product) {
-      return res.status(500).json({
-        error: true,
-        success: false,
-        message: "Product not uploaded"
-      });
+        if (!product) {
+            return res.status(500).json({
+                error: true,
+                success: false,
+                message: "Product not uploaded"
+            });
+        }
+
+        imagesArr = [];
+        res.status(200).json({
+            message: "Product Uploaded Successfully",
+            error: false,
+            success: true,
+            product
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
     }
-
-    imagesArr = [];
-    res.status(200).json({
-      message: "Product Uploaded Successfully",
-      error: false,
-      success: true,
-      product
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message || error,
-      error: true,
-      success: false
-    });
-  }
 }
+
 
 // Get all products
 export async function getAllProducts(request, response) {
@@ -146,7 +150,7 @@ export async function getAllProducts(request, response) {
         const perPage = parseInt(request.query.perPage);
         const totalPosts = await ProductModel.countDocuments();
         const totalPages = Math.ceil(totalPosts / perPage);
-        
+
         if (page > totalPages) {
             return res.status(404).json({
                 message: "Page not found",
@@ -596,7 +600,7 @@ export async function getAllFeaturedProducts(request, response) {
     }
 }
 
-// Get all Delete product
+//  Delete product
 export async function deleteProduct(request, response) {
     const product = await ProductModel.findById(request.params.id).populate("category")
     if (!product) {
@@ -638,43 +642,44 @@ export async function deleteProduct(request, response) {
 
 // Get all Delete Multiple product
 export async function deleteMultipleProduct(request, response) {
-  const {ids} = request.body;
-  if(!ids || !Array.isArray(ids)){
-    return response.status(400).json({error:true, success:false,message:'invalid input'})
-  }
-  for(let i = 0; i<ids.length;i++){
-    const product = await ProductModel.findById(ids[i])
-     const images = product.images;
-     let img = "";
-      for (img of images) {
-        const imgUrl = img;
-        const urlArr = imgUrl.split('/');
-        const image = urlArr[urlArr.length - 1];
+    const { ids } = request.body;
+    if (!ids || !Array.isArray(ids)) {
+        return response.status(400).json({ error: true, success: false, message: 'invalid input' })
+    }
+    for (let i = 0; i < ids.length; i++) {
+        const product = await ProductModel.findById(ids[i])
+        const images = product.images;
+        let img = "";
+        for (img of images) {
+            const imgUrl = img;
+            const urlArr = imgUrl.split('/');
+            const image = urlArr[urlArr.length - 1];
 
-        const imageName = image.split(".")[0]
-        if (imageName) {
-            cloudinary.uploader.destroy(imageName, (error, result) => {
+            const imageName = image.split(".")[0]
+            if (imageName) {
+                cloudinary.uploader.destroy(imageName, (error, result) => {
 
+                })
+            }
+        }
+        try {
+            await ProductModel.deleteMany({ _id: { $in: ids } })
+            return response.status(200).json({
+                message: "Products Deleted successfully done",
+                success: true,
+                error: false
+            })
+        } catch (error) {
+            response.status(500).json({
+                message: "Product not Deleted",
+                success: false,
+                error: true
             })
         }
     }
-  }
 
-  try {
-    await ProductModel.deleteMany({_id:{$in: ids}})
-    return response.status(200).json({
-        message: "Products Deleted successfully done",
-        success: true,
-        error: false
-    })
-  } catch (error) {
-    response.status(404).json({
-            message: "Product not Deleted",
-            success: false,
-            error: true
-        })
-  }
-   
+
+
 
 }
 
@@ -689,12 +694,12 @@ export async function getSingleProduct(request, response) {
                 error: true
             })
         }
-         return response.status(200).json({
-        success: true,
-        error: false,
-        product: product        
+        return response.status(200).json({
+            success: true,
+            error: false,
+            product: product
 
-    })
+        })
 
     } catch (error) {
         return response.status(500).json({
@@ -784,39 +789,204 @@ export async function removeImageFromCloudinary(req, res) {
 } */
 //new
 export async function updateProduct(req, res) {
-  try {
-    const updateFields = { ...req.body };
+    try {
+        const updateFields = { ...req.body };
 
-    // Ensure images is always an array
-    if (!Array.isArray(updateFields.images)) {
-      updateFields.images = [];
+        // Ensure images is always an array
+        if (!Array.isArray(updateFields.images)) {
+            updateFields.images = [];
+        }
+
+        const product = await ProductModel.findByIdAndUpdate(
+            req.params.id,
+            updateFields,
+            { new: true }
+        );
+
+        if (!product) {
+            return res.status(404).json({
+                message: "The product cannot be updated",
+                success: false,
+                error: true,
+            });
+        }
+
+        return res.status(200).json({
+            message: "The product is updated",
+            success: true,
+            error: false,
+            product,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false,
+        });
+    }
+}
+
+// Product size
+export async function createProductSize(request, response) {
+    try {
+        let productSize = new ProductSizeModel({
+            name : request.body.name
+        })
+         productSize = await productSize.save();
+
+        if (!productSize) {
+            return response.status(500).json({
+                error: true,
+                success: false,
+                message: "Product Size not created"
+            });
+        }
+        return response.status(200).json({
+            message: "Product Size Created Successfully",
+            error: false,
+            success: true,
+            productSize
+        });
+    } catch (error) {
+         response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        });
+    }
+}
+// delete product size
+export async function deleteProductSize(request, response){
+    const productSize = await ProductSizeModel.findById(request.params.id)
+     if (!productSize) {
+        return response.status(404).json({
+            message: "Product size not found",
+            success: false,
+            error: true
+        })
+    }
+    const deletedProductSize = await ProductSizeModel.findByIdAndDelete(request.params.id);
+    if (!deletedProductSize) {
+        response.status(404).json({
+            message: "Product size not Deleted",
+            success: false,
+            error: true
+        })
+    }
+  return response.status(200).json({
+        message: "Product size Deleted",
+        success: true,
+        error: false
+    })
+}
+
+// update product size
+export async function updateProductSize(request, response) {
+    try {
+        const productSize = await ProductSizeModel.findByIdAndUpdate(
+            request.params.id, 
+            {
+                name: request.body.name
+            },
+            {
+                new: true
+            }
+        )
+        if(!productSize){
+            return response.status(404).json({
+                message: "Product size can not be Updated",
+                success: false,
+                error: true
+            })
+        }
+        return response.status(200).json({
+                message: "Product size is Updated",
+                success: true,
+                error: false,
+                data: productSize
+            })
+    } catch (error) {
+          response.status(500).json({
+                message: "Product size not Updated",
+                success: false,
+                error: true
+            })
+    }
+    
+}
+
+// delete multiple product size
+export async function deleteProductMultipleSize(request, response){
+    const {ids} = request.body;
+    if(!ids || !Array.isArray(ids)){
+        return response.status(400).json({ error: true, success: false, message: 'invalid input' })
     }
 
-    const product = await ProductModel.findByIdAndUpdate(
-      req.params.id,
-      updateFields,
-      { new: true }
-    );
+     try {
+            await ProductSizeModel.deleteMany({ _id: { $in: ids } })
+            return response.status(200).json({
+                message: "Product size Deleted successfully ",
+                success: true,
+                error: false
+            })
+        } catch (error) {
+            return response.status(500).json({
+                message: "Product size not Deleted",
+                success: false,
+                error: true
+            })
+        }
+}
 
-    if (!product) {
-      return res.status(404).json({
-        message: "The product cannot be updated",
-        success: false,
-        error: true,
-      });
+// get product size
+export async function getProductSize(request, response) {
+    try {
+        const productSize = await ProductSizeModel.find()
+          if(!productSize){
+            return response.status(500).json({
+                message: "Product size can not be Updated",
+                success: false,
+                error: true
+            })
+        }
+         return response.status(200).json({
+                message: "Product size found",
+                success: true,
+                error: false,
+                data: productSize
+            })
+    } catch (error) {
+           return response.status(500).json({
+                message: "Product size not founded",
+                success: false,
+                error: true
+            })
     }
+}
 
-    return res.status(200).json({
-      message: "The product is updated",
-      success: true,
-      error: false,
-      product,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: error.message || error,
-      error: true,
-      success: false,
-    });
-  }
+
+// get product size by id
+export async function getProductSizeById(request, response) {
+    try {
+        const productSize = await ProductSizeModel.findById(request.params.id)
+          if(!productSize){
+            return response.status(500).json({
+                message: "Product size can not be Updated",
+                success: false,
+                error: true
+            })
+        }
+         return response.status(200).json({
+                message: "Product size found",
+                success: true,
+                error: false,
+                data: productSize
+            })
+    } catch (error) {
+           return response.status(500).json({
+                message: "Product size not founded",
+                success: false,
+                error: true
+            })
+    }
 }
