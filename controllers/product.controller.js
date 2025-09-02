@@ -2,7 +2,6 @@ import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 import ProductModel from '../models/product.model.js';
 import ProductSizeModel from '../models/productSize.model.js';
-import ProductColorModel from '../models/productColor.model.js';
 import { request } from 'http';
 
 // ✅ Cloudinary config
@@ -989,4 +988,269 @@ export async function getProductSizeById(request, response) {
                 error: true
             })
     }
+}
+
+
+
+// filter
+/* export async function filters(request, response) {
+    const{catId,subCatId, thirdSubCatId, rating, color, productSize,minPrice, maxPrice, page, limit } = request.body;
+    const filters = {} ;
+    if(catId?.length){
+        filters.catId = {$in: catId}
+    }
+    if(subCatId?.length){
+        filters.subCatId = {$in: subCatId}
+    }
+    if(thirdSubCatId?.length){
+        filters.thirdSubCatId = {$in: thirdSubCatId}
+    }
+    if(minPrice || maxPrice){
+        filters.price = {$gte: +minPrice || 0, $lte: +maxPrice || Infinity}
+    }
+    if(rating?.length){
+        filters.rating = {$in: rating}
+    }
+
+    try {
+        const products = await ProductModel.find(filters).populate("category".skip(page - 1) * limit).limit(parseInt(limit));
+        const total = await ProductModel.countDocuments(filters);
+        return response.status(200).json({
+            success: true,
+            error: false,
+            products: products,
+            total: total,
+            page: parseInt(page),
+            totalPages: Math.ceil(total / limit)
+        })
+    } catch (error) {
+         return response.status(500).json({
+                message: error?.message || error,
+                success: false,
+                error: true
+            })
+    }
+    
+} */
+
+// 
+// filter by chatgpt
+export async function filters(req, res) {
+  try {
+    const {
+      catId,
+      subCatId,
+      thirdSubCatId,
+      rating,
+      color,
+      productSize,
+      minPrice,
+      maxPrice,
+      availability,
+      sort,
+      page = 1,
+      limit = 20,
+      search,
+    } = req.body || {};
+
+    const toArray = (v) =>
+      Array.isArray(v)
+        ? v.filter((x) => x !== undefined && x !== null && x !== "")
+        : v !== undefined && v !== null && v !== ""
+        ? [v]
+        : [];
+
+    const filters = {};
+
+    const catIds = toArray(catId);
+    if (catIds.length) filters.catId = { $in: catIds };
+
+    const subCatIds = toArray(subCatId);
+    if (subCatIds.length) filters.subCatId = { $in: subCatIds };
+
+    const thirdIds = toArray(thirdSubCatId);
+    if (thirdIds.length) filters.thirdSubCatId = { $in: thirdIds };
+
+    const colors = toArray(color).map((c) => String(c).toLowerCase());
+    if (colors.length) filters.color = { $in: colors };
+
+    const sizes = toArray(productSize);
+    if (sizes.length) filters.productSize = { $in: sizes };
+
+    const priceRange = {};
+    const min = Number(minPrice);
+    const max = Number(maxPrice);
+    if (!Number.isNaN(min)) priceRange.$gte = min;
+    if (!Number.isNaN(max)) priceRange.$lte = max;
+    if (priceRange.$gte !== undefined && priceRange.$lte !== undefined && priceRange.$gte > priceRange.$lte) {
+      const tmp = priceRange.$gte;
+      priceRange.$gte = priceRange.$lte;
+      priceRange.$lte = tmp;
+    }
+    if (Object.keys(priceRange).length) filters.price = priceRange;
+
+    const ratingsArr = toArray(rating)
+      .map((n) => Number(n))
+      .filter((n) => !Number.isNaN(n));
+    if (ratingsArr.length === 1) {
+      filters.rating = { $gte: ratingsArr[0] };
+    } else if (ratingsArr.length > 1) {
+      filters.rating = { $in: ratingsArr };
+    }
+
+    // Availability: boolean or array
+    if (Array.isArray(availability)) {
+      const avail = availability.map((v) => {
+        if (v === true || v === false) return v;
+        const s = String(v).toLowerCase();
+        if (s === "true") return true;
+        if (s === "false") return false;
+        return v;
+      });
+      if (avail.length) filters.availability = { $in: avail };
+    } else if (availability !== undefined && availability !== "") {
+      const s = String(availability).toLowerCase();
+      const val = availability === true || s === "true";
+      filters.availability = val;
+    }
+
+    if (search && String(search).trim()) {
+      filters.name = { $regex: String(search).trim(), $options: "i" };
+    }
+
+    // Pagination
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Sorting
+    const sortMap = {
+      salesHighToLow: { sales: -1 },
+      nameAToZ: { name: 1 },
+      nameZToA: { name: -1 },
+      priceLowToHigh: { price: 1 },
+      priceHighToLow: { price: -1 },
+      newest: { createdAt: -1 },
+    };
+    const sortOption = sortMap[sort] || { createdAt: -1 };
+
+    // Query
+    const q = ProductModel.find(filters).sort(sortOption).skip(skip).limit(limitNum).lean();
+    if (sort === "nameAToZ" || sort === "nameZToA") {
+      q.collation({ locale: "en", strength: 2 });
+    }
+
+    // Counts pipelines (global counts; চাইলে filters দিয়ে faceted করতে পারেন)
+    const buildCountPipeline = (field) => [
+      { $match: { [field]: { $exists: true, $ne: null } } },
+      {
+        $project: {
+          vals: {
+            $cond: [{ $isArray: `$${field}` }, `$${field}`, [`$${field}`]],
+          },
+        },
+      },
+      { $unwind: "$vals" },
+      { $group: { _id: "$vals", count: { $sum: 1 } } },
+    ];
+
+    const countsPromise = Promise.all([
+      ProductModel.aggregate(buildCountPipeline("catId")),
+      ProductModel.aggregate(buildCountPipeline("subCatId")),
+      ProductModel.aggregate(buildCountPipeline("thirdSubCatId")),
+    ]);
+
+    const [products, total, [byCat, bySub, byThird]] = await Promise.all([
+      q.exec(),
+      ProductModel.countDocuments(filters),
+      countsPromise,
+    ]);
+
+    const toMap = (arr) =>
+      arr.reduce((acc, { _id, count }) => {
+        if (_id !== null && _id !== undefined && _id !== "") {
+          acc[String(_id)] = count;
+        }
+        return acc;
+      }, {});
+
+    const totalPages = Math.max(Math.ceil(total / limitNum), 1);
+
+    return res.status(200).json({
+      success: true,
+      error: false,
+      products,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      hasNextPage: pageNum < totalPages,
+      hasPrevPage: pageNum > 1,
+      counts: {
+        cat: toMap(byCat),
+        sub: toMap(bySub),
+        third: toMap(byThird),
+      },
+    });
+  } catch (error) {
+    console.error("filters error:", error);
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: error?.message || "Internal server error",
+    });
+  }
+}
+
+//count category and subcategory
+export async function categoryCounts(req, res) {
+  try {
+    const buildCountPipeline = (field) => [
+      { $match: { [field]: { $exists: true, $ne: null } } },
+      {
+        $project: {
+          vals: {
+            $cond: [
+              { $isArray: `$${field}` },
+              `$${field}`,
+              [`$${field}`],
+            ],
+          },
+        },
+      },
+      { $unwind: "$vals" },
+      { $group: { _id: "$vals", count: { $sum: 1 } } },
+    ];
+
+    const [byCat, bySub, byThird] = await Promise.all([
+      ProductModel.aggregate(buildCountPipeline("catId")),
+      ProductModel.aggregate(buildCountPipeline("subCatId")),
+      ProductModel.aggregate(buildCountPipeline("thirdSubCatId")),
+    ]);
+
+    const toMap = (arr) =>
+      arr.reduce((acc, { _id, count }) => {
+        if (_id !== null && _id !== undefined && _id !== "") {
+          acc[String(_id)] = count;
+        }
+        return acc;
+      }, {});
+
+    return res.status(200).json({
+      success: true,
+      error: false,
+      data: {
+        cat: toMap(byCat),
+        sub: toMap(bySub),
+        third: toMap(byThird),
+      },
+    });
+  } catch (e) {
+    console.error("categoryCounts error:", e);
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: e?.message || "Failed to get category counts",
+    });
+  }
 }

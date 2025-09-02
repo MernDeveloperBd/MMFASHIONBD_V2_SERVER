@@ -10,6 +10,7 @@ import jwt from 'jsonwebtoken';
 
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
+import ReviewModel from '../models/review.model.js';
 // ✅ Cloudinary config
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -30,7 +31,7 @@ export async function registerUserController(request, response) {
                 success: false
             })
         }
-     user = await UserModel.findOne({ email: email })
+        user = await UserModel.findOne({ email: email })
         if (user) {
             return response.status(400).json({
                 message: 'User already registered within this email',
@@ -117,6 +118,78 @@ export async function verifyEmailController(request, response) {
     }
 }
 
+// Auth with google
+export async function authWithGoogleController(request, response) {
+    const { name, email, avatar, mobile, role } = request.body;
+
+    try {
+        const existingUser = await UserModel.findOne({ email: email });
+        if (!existingUser) {
+            const user = await UserModel.create({
+                name: name,
+                mobile: mobile,
+                email: email,
+                password: "null",
+                avatar: avatar,
+                role: role,
+                verify_email: true,
+                signUpWithGoolge: true,
+            });
+            await user.save();
+
+            const accessToken = await generatedAccessToken(user._id)
+            const refreshToken = await generatedRefreshToken(user._id)
+
+            await UserModel.findByIdAndUpdate(user?._id, { last_login_date: new Date() })
+            const cookiesOption = {
+                httpOnly: true,
+                secure: true,
+                sameSite: "None",
+
+            }
+            response.cookie('accessToken', accessToken, cookiesOption)
+            response.cookie('refreshToken', refreshToken, cookiesOption)
+
+            return response.json({
+                message: "Google Login successful",
+                error: false,
+                success: true,
+                data: {
+                    accessToken, refreshToken
+                }
+            })
+        } else {
+            const accessToken = await generatedAccessToken(existingUser._id)
+            const refreshToken = await generatedRefreshToken(existingUser._id)
+
+            await UserModel.findByIdAndUpdate(existingUser?._id, { last_login_date: new Date() })
+            const cookiesOption = {
+                httpOnly: true,
+                secure: true,
+                sameSite: "None",
+
+            }
+            response.cookie('accessToken', accessToken, cookiesOption)
+            response.cookie('refreshToken', refreshToken, cookiesOption)
+
+            return response.json({
+                message: "Google Login successful",
+                error: false,
+                success: true,
+                data: {
+                    accessToken, refreshToken
+                }
+            })
+        }
+    } catch (error) {
+        return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
+
 // Login user controller
 export async function loginUserController(request, response) {
     try {
@@ -143,7 +216,7 @@ export async function loginUserController(request, response) {
                 success: false
             })
         }
-     
+
         const checkPassword = await bcryptjs.compare(password, user.password);
         if (!checkPassword) {
             return response.status(400).json({
@@ -154,8 +227,8 @@ export async function loginUserController(request, response) {
         }
         const accessToken = await generatedAccessToken(user._id)
         const refreshToken = await generatedRefreshToken(user._id)
-       
-        
+
+
 
         const updateUser = await UserModel.findByIdAndUpdate(user?._id, { last_login_date: new Date() })
         const cookiesOption = {
@@ -255,9 +328,9 @@ export async function userAvatarController(request, response) {
             const img = await cloudinary.uploader.upload(
                 image[i].path,
                 options,
-                function (error, result) {                   
+                function (error, result) {
                     imagesArr.push(result?.secure_url);
-                    fs.unlinkSync(`uploads/${request.files[i].filename}`);                                      
+                    fs.unlinkSync(`uploads/${request.files[i].filename}`);
                 }
             )
         };
@@ -325,10 +398,10 @@ export async function updateUserDetails(request, response) {
             userId,
             {
                 name: name,
-                 mobile: mobile, 
-                 email: email,
-                  verify_email: email !== userExist.email ? false : true,
-                  password: hashPassword,
+                mobile: mobile,
+                email: email,
+                verify_email: email !== userExist.email ? false : true,
+                password: hashPassword,
                 otp: verifyCode !== "" ? verifyCode : null,
                 otpExpires: verifyCode !== "" ? Date.now() + 600000 : ""
             },
@@ -348,13 +421,13 @@ export async function updateUserDetails(request, response) {
             message: "User Updated Successfully",
             error: false,
             success: true,
-           user: {
+            user: {
                 name: updateUser?.name,
                 _id: updateUser?._id,
                 email: updateUser?.email,
                 mobile: updateUser?.mobile,
                 avatar: updateUser?.avatar,
-            } 
+            }
         })
 
 
@@ -370,7 +443,7 @@ export async function updateUserDetails(request, response) {
 export async function forgotPasswordController(request, response) {
     try {
         const { email } = request.body;
-        const user = await UserModel.findOne({ email: email });        
+        const user = await UserModel.findOne({ email: email });
 
         if (!user) {
             return response.status(400).json({
@@ -381,11 +454,11 @@ export async function forgotPasswordController(request, response) {
         }
         else {
             let verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-            
-          user.otp = verifyCode;
+
+            user.otp = verifyCode;
             user.otpExpires = Date.now() + 600000;
             await user.save()
-  
+
             await sendEmailFun({
                 to: email,
                 subject: "Forgot password Verify email from MM Fashion World",
@@ -394,7 +467,7 @@ export async function forgotPasswordController(request, response) {
             })
 
             return response.json({
-                message: "Check your email",
+                message: "Check your email inbox or spam folder",
                 error: false,
                 success: true
             })
@@ -466,10 +539,10 @@ export async function verifyForgotPasswordOtp(request, response) {
 // Reset password controller
 export async function resetPasswordController(request, response) {
     try {
-        const { email,  newPassword, confirmPassword } = request.body;
+        const { email, oldPassword, newPassword, confirmPassword } = request.body;
         if (!email || !newPassword || !confirmPassword) {
             return response.status(400).json({
-                error: true, 
+                error: true,
                 success: false,
                 message: "Provide required fields email, newPassword, confirmPassword"
             })
@@ -482,7 +555,19 @@ export async function resetPasswordController(request, response) {
                 success: false
             })
         }
-      
+        if (user?.signUpWithGoolge === false) {
+            const checkPassword = await bcryptjs.compare(oldPassword, user.password);
+            if (!checkPassword) {
+                return response.status(400).json({
+                    message: "your old password is wrong",
+                    error: true,
+                    success: false
+                })
+            }
+
+        }
+
+
         if (newPassword !== confirmPassword) {
             return response.status(400).json({
                 message: "newPassword and confirmPassword must be same",
@@ -494,10 +579,11 @@ export async function resetPasswordController(request, response) {
         const salt = await bcryptjs.genSalt(10)
         const hashPassword = await bcryptjs.hash(confirmPassword, salt);
         user.password = hashPassword;
+        user.signUpWithGoolge = false;
         await user.save();
 
-        const update = await UserModel.findOneAndUpdate(user?._id,{
-            password : hashPassword
+        const update = await UserModel.findOneAndUpdate(user?._id, {
+            password: hashPassword
         })
 
         return response.json({
@@ -556,7 +642,7 @@ export async function refreshTokenController(request, response) {
 
     } catch (error) {
         return response.status(500).json({
-            message: error.message || error,
+            message: "something is wrong",
             error: true,
             success: false
         })
@@ -577,6 +663,60 @@ export async function userDetailsController(request, response) {
     } catch (error) {
         return response.status(500).json({
             message: error.message || error,
+            error: true,
+            success: false
+        })
+    }
+}
+
+//Add Review Controllers
+export async function addReviewController(request, response) {
+    try {
+        const{image, userName,review,rating, productId, userId} = request.body;
+        const userReview = await ReviewModel({
+            image:image,
+            userName:userName,
+            review:review,
+            rating:rating,
+            userId:userId,
+            productId:productId
+        })
+        await userReview.save();
+
+         return response.json({
+                message: "Review Added Successfully",
+                error: false,
+                success: true,
+            })
+    } catch (error) {
+         return response.status(500).json({
+            message: "Please Log in",
+            error: true,
+            success: false
+        })
+    }
+}
+
+//Get review controller
+export async function getReviewController(request, response) {
+    try {
+        const productId = request.query.productId;
+        const reviews = await ReviewModel.find({productId:productId});
+        if(!reviews){
+             return response.status(400).json({
+            error: true,
+            success: false
+        })
+        }
+           return response.status(200).json({
+            error: false,
+            success: true,
+            reviews:reviews
+        })
+        
+    } catch (error) {
+         return response.status(500).json({
+            message: "something is wrong",
             error: true,
             success: false
         })

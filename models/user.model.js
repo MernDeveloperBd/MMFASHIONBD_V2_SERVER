@@ -80,7 +80,11 @@ const userSchema = new mongoose.Schema({
         type:String,
         enum:['ADMIN', 'USER', 'RESELLER','WHOLESELLER'],
         default:"USER"
-    }
+    },
+    signUpWithGoolge:{
+    type:Boolean,
+    default: false
+}
 },
 {
     timestamps:true

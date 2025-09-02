@@ -13,6 +13,7 @@ import productRouter from './route/product.route.js';
 import cartRouter from './route/cart.route.js';
 import myListRouter from './route/myList.route.js';
 import addressRouter from './route/address.route.js';
+import homeSlideRouter from './route/homeSlide.route.js';
 
 // app confit
 const app = express();
@@ -39,6 +40,7 @@ app.use('/api/product', productRouter )
 app.use('/api/cart', cartRouter )
 app.use('/api/myList', myListRouter )
 app.use('/api/address', addressRouter)
+app.use('/api/homeSlides', homeSlideRouter)
 
 
 app.get('/', (request, response)=>{

@@ -9,9 +9,9 @@ categoryRouter.post('/createCategory', auth, createCategory)
 categoryRouter.get('/', getCategoryController)
 categoryRouter.get('/get/count', getCategoryCountController)
 categoryRouter.get('/get/count/subCat', getSubCategoryCountController)
-categoryRouter.get('/:id', getSingleCategoryController)
+categoryRouter.get('/single/:id', getSingleCategoryController)
 categoryRouter.delete('/deleteImage', auth, removeImageFromCloudinary)
-categoryRouter.delete('/:id', auth, deleteCategoryController)
+categoryRouter.delete('/single/:id', auth, deleteCategoryController)
 categoryRouter.put('/:id', auth, updateCategoryController)
 
 

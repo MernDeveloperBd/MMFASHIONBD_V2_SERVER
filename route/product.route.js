@@ -1,6 +1,6 @@
 import { Router } from "express";
 import upload from "../middleware/multer.js";
-import { createProduct,  createProductSize, deleteMultipleProduct, deleteProduct, deleteProductMultipleSize, deleteProductSize, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getAllProductsByThirdLevelCatId, getAllProductsByThirdLevelCatName, getAllProductsCount, getProductSize, getProductSizeById, getSingleProduct, removeImageFromCloudinary, updateProduct, updateProductSize, uploadImagesController } from "../controllers/product.controller.js";
+import { categoryCounts, createProduct,  createProductSize, deleteMultipleProduct, deleteProduct, deleteProductMultipleSize, deleteProductSize, filters, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getAllProductsByThirdLevelCatId, getAllProductsByThirdLevelCatName, getAllProductsCount, getProductSize, getProductSizeById, getSingleProduct, removeImageFromCloudinary, updateProduct, updateProductSize, uploadImagesController } from "../controllers/product.controller.js";
 import auth from "../middleware/auth.js";
 import { createProductColor, deleteProductColor, deleteProductMultipleColor, getProductColor, getProductColorById, updateProductColor } from "../controllers/color.controller.js";
 
@@ -37,5 +37,8 @@ productRouter.put('/productColor/:id', updateProductColor)
 productRouter.delete('/deleteMultipleColor', auth, deleteProductMultipleColor)
 productRouter.get('/productColor/get', getProductColor)
 productRouter.get('/productColor/:id', getProductColorById)
+
+productRouter.post('/filters', filters )
+productRouter.get('/category-counts', auth, categoryCounts);
 
 export default productRouter;
