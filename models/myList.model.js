@@ -26,20 +26,14 @@ const myListSchema = new mongoose.Schema({
     },
     oldPrice:{
         type: Number,
-        required: true
     },
     resellingPrice:{
         type: Number,
-        required: true
     },
     catName:{
         type: String,
         required: true
-    },
-    discount:{
-        type: Number,
-        required: true
-    },
+    }
 },
 {
     timestamps: true

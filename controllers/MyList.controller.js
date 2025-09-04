@@ -4,7 +4,7 @@ import MyListModel from "../models/myList.model.js";
 export const AddToMyListController = async(request, response)=>{
     try {
         const userId = request.userId; //middleware
-        const{productId, productTitle, image, rating, price, oldPrice, resellingPrice, catName, discount} = request.body;
+        const{productId, productTitle, image, rating, price, oldPrice, resellingPrice, catName} = request.body;
 
         const item = await MyListModel.findOne({
             userId: userId,
@@ -18,7 +18,7 @@ console.log(item);
             })
         }
         const myList = new MyListModel({
-            productId,userId, productTitle, image, rating, price, oldPrice, resellingPrice,catName, discount
+            productId,userId, productTitle, image, rating, price, oldPrice, resellingPrice,catName
         })
         const save = await myList.save();
 
