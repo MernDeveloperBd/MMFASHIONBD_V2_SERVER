@@ -14,6 +14,8 @@ import cartRouter from './route/cart.route.js';
 import myListRouter from './route/myList.route.js';
 import addressRouter from './route/address.route.js';
 import homeSlideRouter from './route/homeSlide.route.js';
+import orderRouter from './route/order.route.js';
+import { verifyEmailTransport } from './utils/email.js';
 
 // app confit
 const app = express();
@@ -41,6 +43,7 @@ app.use('/api/cart', cartRouter )
 app.use('/api/myList', myListRouter )
 app.use('/api/address', addressRouter)
 app.use('/api/homeSlides', homeSlideRouter)
+app.use('/api/order', orderRouter);
 
 
 app.get('/', (request, response)=>{
@@ -52,7 +55,8 @@ app.get('/', (request, response)=>{
     console.log(`MM Fashion world is running on port: ${port}`);
 }) */
 
-connectDB().then(() =>{
+connectDB().then(async() =>{
+    await verifyEmailTransport(); 
     app.listen(port, ()=>{
     console.log(`MM Fashion world Server is running on port: ${port}`);
 })
